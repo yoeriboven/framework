@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bootstrap\RegisterProviders;
 use Illuminate\Foundation\Events\DiagnosingHealth;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as AppEventServiceProvider;
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as AppRouteServiceProvider;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
@@ -150,8 +151,8 @@ class ApplicationBuilder
     public function withRouting(?Closure $using = null,
         array|string|null $web = null,
         array|string|null $api = null,
-        ?string $commands = null,
-        ?string $channels = null,
+        array|string|null $commands = null,
+        array|string|null $channels = null,
         ?string $pages = null,
         ?string $health = null,
         string $apiPrefix = 'api',
@@ -167,9 +168,12 @@ class ApplicationBuilder
             $this->app->register(AppRouteServiceProvider::class, force: true);
         });
 
-        if (is_string($commands) && realpath($commands) !== false) {
-            $this->withCommands([$commands]);
-        }
+        $this->withCommands(
+            array_filter(
+                Arr::wrap($commands),
+                fn ($command) => is_string($command) && realpath($command) !== false
+            )
+        );
 
         if (is_string($channels) && realpath($channels) !== false) {
             $this->withBroadcasting($channels);
